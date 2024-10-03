@@ -1,87 +1,17 @@
--- print("[NPC Mod] Script file loaded")
-
--- -- Rest of your existing script here...
-
--- -- NPC Spawn and Follow Script
-
--- local NPC = {}
--- NPC.spawnDistance = 5 -- Distance from player to spawn NPC
-
--- -- Debug function
--- local function debugLog(message)
---     print("[NPC Mod] " .. message)
--- end
-
--- -- Function to spawn NPC near player
--- function NPC.spawn(player)
---     debugLog("Attempting to spawn NPC")
---     local x = player:getX() + ZombRand(-NPC.spawnDistance, NPC.spawnDistance)
---     local y = player:getY() + ZombRand(-NPC.spawnDistance, NPC.spawnDistance)
---     local z = player:getZ()
-    
---     local npc = addNPC("Bob", nil, nil, nil, x, y, z, nil)
---     if npc then
---         debugLog("NPC spawned successfully at " .. x .. ", " .. y .. ", " .. z)
---         npc:setInvincible(true) -- Make NPC invincible for now
---     else
---         debugLog("Failed to spawn NPC")
---     end
---     return npc
--- end
-
--- -- Function to make NPC follow player
--- function NPC.follow(npc, player)
---     if not npc or not player then
---         debugLog("NPC or player is nil in follow function")
---         return
---     end
---     local playerX, playerY = player:getX(), player:getY()
---     local npcX, npcY = npc:getX(), npc:getY()
-    
---     local dx = playerX - npcX
---     local dy = playerY - npcY
-    
---     -- Simple follow logic (can be improved)
---     if math.abs(dx) > 2 or math.abs(dy) > 2 then
---         npc:setPath2(playerX, playerY, player:getZ())
---     else
---         npc:StopAllActionQueue()
---     end
--- end
-
--- -- Initialization function
--- local function initNPCMod()
---     debugLog("Initializing NPC Mod")
-    
---     -- Event to spawn NPC when player spawns
---     Events.OnPlayerSpawn.Add(function(playerIndex, player)
---         debugLog("Player spawn event triggered")
---         NPC.instance = NPC.spawn(player)
---     end)
-
---     -- Event to make NPC follow player (called every game tick)
---     Events.OnTick.Add(function()
---         local player = getSpecificPlayer(0)
---         if player and NPC.instance then
---             NPC.follow(NPC.instance, player)
---         end
---     end)
-    
---     debugLog("NPC Mod initialized successfully")
--- end
-
--- -- Call initialization function
--- initNPCMod()
-
+-- NPC Mod
 
 if not NPCMod then NPCMod = {} end
 
 NPCMod.SpawnDistance = 5
+NPCMod.FollowInterval = 3 -- Time interval in seconds for following the player
+NPCMod.timer = 0 -- Initialize a timer for controlling the follow frequency
 
+-- Function called when the game starts
 NPCMod.OnGameStart = function()
     print("[NPC Mod] Game started, mod loaded successfully")
 end
 
+-- Function to spawn the NPC
 NPCMod.SpawnNPC = function()
     print("[NPC Mod] Attempting to spawn NPC")
     local player = getSpecificPlayer(0)
@@ -99,7 +29,7 @@ NPCMod.SpawnNPC = function()
         npc:setSceneCulled(false)
         npc:setBlockMovement(true)
         npc:setNPC(true)
-        npc:getInventory():AddItem("Base.Tshirt_Rock")        
+        npc:getInventory():AddItem("Base.Tshirt_Rock")
         print("[NPC Mod] NPC spawned successfully at " .. x .. ", " .. y .. ", " .. z)
     else
         print("[NPC Mod] Failed to spawn NPC")
@@ -107,6 +37,7 @@ NPCMod.SpawnNPC = function()
     return npc
 end
 
+-- Function to make NPC follow the player
 NPCMod.FollowPlayer = function()
     if not NPCMod.npc or not getSpecificPlayer(0) then return end
 
@@ -116,20 +47,78 @@ NPCMod.FollowPlayer = function()
     local dx = player:getX() - npc:getX()
     local dy = player:getY() - npc:getY()
 
-    if math.abs(dx) > 2 or math.abs(dy) > 2 then
-        npc:setX(npc:getX() + dx * 0.1)
-        npc:setY(npc:getY() + dy * 0.1)
-    end
-end
 
-NPCMod.OnTick = function()
-    if not NPCMod.npc then
-        NPCMod.npc = NPCMod.SpawnNPC()
+    local distance = math.sqrt(dx * dx + dy * dy)
+
+    print("[NPC Mod] NPC position relative to player: " .. dx .. "," .. dy .. "," .. distance)
+
+    -- Only follow if the player is more than a certain distance away
+    if distance > 1 then
+        -- Check if NPC is not already moving
+        print("PLAYER", player)
+        print("NPC", npc)
+
+
+        if not npc:getPathFindBehavior2():isTargetLocation(player:getX(), player:getY(), player:getZ()) then
+            print("SHOULD DO SOMETHING RIGHT")
+            npc:getPathFindBehavior2():pathToLocation(player:getX(), player:getY(), player:getZ())
+        end
     else
-        NPCMod.FollowPlayer()
+        -- Stop moving when close enough
+        npc:getPathFindBehavior2():cancel()
+    end
+
+    print("STOP BANANA TIME")
+
+
+    -- Make NPC face the player
+    local angle = math.atan2(dy, dx)
+    local angleInDegrees = math.deg(angle)
+    if angleInDegrees < 0 then
+        angleInDegrees = angleInDegrees + 360
+    end
+
+    local direction = nil
+
+    if angleInDegrees >= 337.5 or angleInDegrees < 22.5 then
+        direction = IsoDirections.E
+    elseif angleInDegrees >= 22.5 and angleInDegrees < 67.5 then
+        direction = IsoDirections.SE
+    elseif angleInDegrees >= 67.5 and angleInDegrees < 112.5 then
+        direction = IsoDirections.S
+    elseif angleInDegrees >= 112.5 and angleInDegrees < 157.5 then
+        direction = IsoDirections.SW
+    elseif angleInDegrees >= 157.5 and angleInDegrees < 202.5 then
+        direction = IsoDirections.W
+    elseif angleInDegrees >= 202.5 and angleInDegrees < 247.5 then
+        direction = IsoDirections.NW
+    elseif angleInDegrees >= 247.5 and angleInDegrees < 292.5 then
+        direction = IsoDirections.N
+    elseif angleInDegrees >= 292.5 and angleInDegrees < 337.5 then
+        direction = IsoDirections.NE
+    end
+
+    npc:setDir(direction)
+end
+
+-- Function called every game tick
+NPCMod.OnTick = function()
+    -- Timer management to trigger follow logic every 3 seconds
+    NPCMod.timer = NPCMod.timer + getGameTime():getMultiplier()
+    if NPCMod.timer >= NPCMod.FollowInterval then
+        NPCMod.timer = 0 -- Reset the timer
+
+        if not NPCMod.npc then
+            -- Spawn NPC if it doesn't exist
+            NPCMod.npc = NPCMod.SpawnNPC()
+        else
+            -- Make NPC follow the player
+            NPCMod.FollowPlayer()
+        end
     end
 end
 
+-- Register events
 Events.OnGameStart.Add(NPCMod.OnGameStart)
 Events.OnTick.Add(NPCMod.OnTick)
 
