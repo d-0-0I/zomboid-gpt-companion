@@ -1,0 +1,8 @@
+name=ChatGPTCompanion
+id=ChatGPTCompanion
+description=This mod adds an NPC that follows the player.
+poster=poster.png
+
+modversion=1.0
+versionMin=41.0
+versionMax=42.0
