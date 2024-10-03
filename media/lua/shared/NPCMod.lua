@@ -99,6 +99,7 @@ NPCMod.SpawnNPC = function()
         npc:setSceneCulled(false)
         npc:setBlockMovement(true)
         npc:setNPC(true)
+        npc:getInventory():AddItem("Base.Tshirt_Rock")        
         print("[NPC Mod] NPC spawned successfully at " .. x .. ", " .. y .. ", " .. z)
     else
         print("[NPC Mod] Failed to spawn NPC")
