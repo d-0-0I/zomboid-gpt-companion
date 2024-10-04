@@ -11,7 +11,7 @@ NPCMod.OnGameStart = function()
     print("[NPC Mod] Game started, mod loaded successfully")
 end
 
--- Function to spawn the NPC
+-- Function to spawn the NPC as a zombie
 NPCMod.SpawnNPC = function()
     print("[NPC Mod] Attempting to spawn NPC")
     local player = getSpecificPlayer(0)
@@ -24,13 +24,14 @@ NPCMod.SpawnNPC = function()
     local y = player:getY() + ZombRand(-NPCMod.SpawnDistance, NPCMod.SpawnDistance)
     local z = player:getZ()
 
-    local npc = IsoPlayer.new(getWorld():getCell(), nil, x, y, z)
-    if npc then
-        npc:setSceneCulled(false)
-        npc:setBlockMovement(true)
-        npc:setNPC(true)
-        npc:getInventory():AddItem("Base.Tshirt_Rock")
+    print("[NPC Mod] Spawning at coordinates: x=" .. x .. ", y=" .. y .. ", z=" .. z)
+    local npc = createZombie(x, y, z, nil, 0, IsoDirections.S)
+    if npc ~= nil then
+        npc:setUseless(true) -- Make the zombie harmless
+        npc:DoZombieStats() -- Apply zombie stats
+        npc:setDir(IsoDirections.S) -- Set initial direction
         print("[NPC Mod] NPC spawned successfully at " .. x .. ", " .. y .. ", " .. z)
+        NPCMod.npc = npc -- Store reference to the spawned NPC
     else
         print("[NPC Mod] Failed to spawn NPC")
     end
@@ -43,62 +44,25 @@ NPCMod.FollowPlayer = function()
 
     local player = getSpecificPlayer(0)
     local npc = NPCMod.npc
+    -- if not npc then
+    --     print("[NPC Mod] NPC does not exist or is invalid")
+    --     return
+    -- end
 
     local dx = player:getX() - npc:getX()
     local dy = player:getY() - npc:getY()
 
-
     local distance = math.sqrt(dx * dx + dy * dy)
 
-    print("[NPC Mod] NPC position relative to player: " .. dx .. "," .. dy .. "," .. distance)
+    print(string.format("[NPC Mod] NPC position relative to player: dx=%.2f, dy=%.2f, distance=%.2f", dx, dy, distance))
 
     -- Only follow if the player is more than a certain distance away
     if distance > 1 then
-        -- Check if NPC is not already moving
-        print("PLAYER", player)
-        print("NPC", npc)
-
-
-        if not npc:getPathFindBehavior2():isTargetLocation(player:getX(), player:getY(), player:getZ()) then
-            print("SHOULD DO SOMETHING RIGHT")
-            npc:getPathFindBehavior2():pathToLocation(player:getX(), player:getY(), player:getZ())
-        end
-    else
-        -- Stop moving when close enough
-        npc:getPathFindBehavior2():cancel()
+        -- if npc.pathToLocation then
+            -- npc:pathToLocation(player:getX(), player:getY(), player:getZ()) -- Use zombie pathfinding to follow the player
+        -- else
+        npc:pathToCharacter(player)
     end
-
-    print("STOP BANANA TIME")
-
-
-    -- Make NPC face the player
-    local angle = math.atan2(dy, dx)
-    local angleInDegrees = math.deg(angle)
-    if angleInDegrees < 0 then
-        angleInDegrees = angleInDegrees + 360
-    end
-
-    local direction = nil
-
-    if angleInDegrees >= 337.5 or angleInDegrees < 22.5 then
-        direction = IsoDirections.E
-    elseif angleInDegrees >= 22.5 and angleInDegrees < 67.5 then
-        direction = IsoDirections.SE
-    elseif angleInDegrees >= 67.5 and angleInDegrees < 112.5 then
-        direction = IsoDirections.S
-    elseif angleInDegrees >= 112.5 and angleInDegrees < 157.5 then
-        direction = IsoDirections.SW
-    elseif angleInDegrees >= 157.5 and angleInDegrees < 202.5 then
-        direction = IsoDirections.W
-    elseif angleInDegrees >= 202.5 and angleInDegrees < 247.5 then
-        direction = IsoDirections.NW
-    elseif angleInDegrees >= 247.5 and angleInDegrees < 292.5 then
-        direction = IsoDirections.N
-    elseif angleInDegrees >= 292.5 and angleInDegrees < 337.5 then
-        direction = IsoDirections.NE
-    end
-
-    npc:setDir(direction)
 end
 
 -- Function called every game tick
