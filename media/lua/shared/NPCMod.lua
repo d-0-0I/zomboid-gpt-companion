@@ -1,11 +1,14 @@
--- NPC Mod with ChatGPT Integration
+-- NPC Mod with ChatGPT Integration via File System
 
 if not NPCMod then NPCMod = {} end
-
 
 NPCMod.SpawnDistance = 5
 NPCMod.FollowInterval = 3 -- Time interval in seconds for following the player
 NPCMod.timer = 0 -- Initialize a timer for controlling the follow frequency
+
+-- Paths to input and output files
+NPCMod.UserInputFilePath = "./user_input.txt"
+NPCMod.ResponseFilePath = "./response.txt"
 
 -- Function called when the game starts
 NPCMod.OnGameStart = function()
@@ -74,6 +77,22 @@ NPCMod.OnTick = function()
             NPCMod.FollowPlayer()
         end
     end
+
+    -- Check for new response from external process
+    NPCMod.CheckForResponse()
+end
+
+-- Function to handle chat input
+NPCMod.OnKeyPressed = function(key)
+    if key == Keyboard.KEY_TAB then
+        local player = getSpecificPlayer(0)
+        if not player or not NPCMod.npc then return end
+
+        -- Create a simple input box using UIManager to get user input
+        local inputModal = ISTextBox:new(0, 0, 280, 180, "Enter your message to the NPC:", "", nil, NPCMod.OnInputSubmitted)
+        inputModal:initialise()
+        inputModal:addToUIManager()
+    end
 end
 
 -- Function to handle submitted input
@@ -84,41 +103,35 @@ NPCMod.OnInputSubmitted = function(target, button, text)
     local text = button.parent.entry:getText()
     if text ~= "" then
         player:Say(text)
+        NPCMod.WriteToFile(NPCMod.UserInputFilePath, text)
     end
 end
 
-
--- Function to handle chat input
-NPCMod.OnKeyPressed = function(key)
-    local player = getSpecificPlayer(0)
-
-    -- local function onSubmit(target, button, containerObj)
-    --     print("modlog2", target, button, button.parent.entry:getText(), containerObj)
-
-    --     player:Say( button.parent.entry:getText())
-    -- end
-    
-    if key == Keyboard.KEY_TAB then
-        local player = getSpecificPlayer(0)
-        if not player or not NPCMod.npc then return end
-
-        -- Create a simple input box using UIManager to get user input
-
-        -- local modal =      ISTextBox:new(0, 0, 280, 150, label, name,nil, onRename, playerObj:getPlayerNum(), containerObj)
-        local inputModal = ISTextBox:new(0, 0, 280, 180, "Enter your message to the NPC:", "", nil, NPCMod.OnInputSubmitted, player:getPlayerNum())
-        inputModal:initialise()
-        inputModal:addToUIManager()
+-- Function to write to a file
+NPCMod.WriteToFile = function(filePath, content)
+    local file = getFileWriter(filePath, true, false)
+    print("modlog", file, content)
+    if file then
+        file:write(content .. "\n")
+        file:close()
+    else
+        print("[NPC Mod] Failed to write to file: " .. filePath)
     end
 end
 
--- Function to get response from ChatGPT API
-NPCMod.GetChatGPTResponse = function(userInput, callback)
-    -- Placeholder for API call, assuming an asynchronous HTTP request
-    -- Replace with actual API request code as needed
-    print("[NPC Mod] Sending request to ChatGPT API with user input: " .. userInput)
-    -- Simulate an asynchronous response with a delay
-    local simulatedResponse = "This is a response from ChatGPT to: " .. userInput
-    callback(simulatedResponse)
+-- Function to check for response from external process
+NPCMod.CheckForResponse = function()
+    local file = getFileReader(NPCMod.ResponseFilePath, false)
+    if file then
+        local response = file:readLine()
+        file:close()
+        if response and response:trim() ~= "" then
+            -- Display response above NPC
+            NPCMod.DisplayChatBubble(NPCMod.npc, response)
+            -- Clear the response file
+            NPCMod.WriteToFile(NPCMod.ResponseFilePath, "")
+        end
+    end
 end
 
 -- Function to display chat bubble above NPC
