@@ -2,13 +2,16 @@
 
 if not NPCMod then NPCMod = {} end
 
-NPCMod.SpawnDistance = 5
+NPCMod.SpawnDistance = 2
 NPCMod.FollowInterval = 3 -- Time interval in seconds for following the player
+NPCMod.ScreenshotInterval = 45 -- Time interval in seconds for taking screenshots
 NPCMod.timer = 0 -- Initialize a timer for controlling the follow frequency
+NPCMod.screenshotTimer = 0 -- Initialize a timer for controlling screenshot frequency
 
 -- Paths to input and output files
 NPCMod.UserInputFilePath = "./user_input.txt"
 NPCMod.ResponseFilePath = "./response.txt"
+NPCMod.ScreenshotFileName = "pzscreenshot.png"
 NPCMod.LastResponseContent = "" -- Track the last content of the response file
 
 -- Function called when the game starts
@@ -53,8 +56,6 @@ NPCMod.FollowPlayer = function()
 
     local distance = math.sqrt(dx * dx + dy * dy)
 
-    -- print(string.format("[NPC Mod] NPC position relative to player: dx=%.2f, dy=%.2f, distance=%.2f", dx, dy, distance))
-
     -- Only follow if the player is more than a certain distance away
     if distance > 1 then
         npc:pathToCharacter(player)
@@ -76,6 +77,13 @@ NPCMod.OnTick = function()
             NPCMod.FollowPlayer()
         end
     end
+
+    -- Timer management to trigger screenshot taking every 30 seconds
+    -- NPCMod.screenshotTimer = NPCMod.screenshotTimer + getGameTime():getMultiplier()
+    -- if NPCMod.screenshotTimer >= NPCMod.ScreenshotInterval then
+    --     NPCMod.screenshotTimer = 0 -- Reset the screenshot timer
+    --     NPCMod.TakeScreenshot()
+    -- end
 
     -- Check if response file has been updated
     NPCMod.CheckForResponse()
@@ -100,6 +108,7 @@ NPCMod.OnInputSubmitted = function(target, button, text)
     local text = button.parent.entry:getText()
     if text ~= "" then
         player:Say(text)
+        NPCMod.TakeScreenshot()
         NPCMod.WriteToFile(NPCMod.UserInputFilePath, text)
     end
 end
@@ -107,7 +116,6 @@ end
 -- Function to write to a file
 NPCMod.WriteToFile = function(filePath, content)
     local file = getFileWriter(filePath, true, false)
-    print("modlog", file, content)
     if file then
         file:write(content .. "\n")
         file:close()
@@ -129,6 +137,14 @@ NPCMod.CheckForResponse = function()
             NPCMod.npc:addLineChatElement(response)
         end
     end
+end
+
+-- Function to take a screenshot
+NPCMod.TakeScreenshot = function()
+    print("[NPC Mod] Taking screenshot...")
+    -- Placeholder: Replace this with actual screenshot logic for Project Zomboid
+    -- Assuming a function 'takeScreenshot' exists or can be implemented
+    takeScreenshot(NPCMod.ScreenshotFileName)
 end
 
 -- Register events
