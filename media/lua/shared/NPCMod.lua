@@ -9,6 +9,7 @@ NPCMod.timer = 0 -- Initialize a timer for controlling the follow frequency
 -- Paths to input and output files
 NPCMod.UserInputFilePath = "./user_input.txt"
 NPCMod.ResponseFilePath = "./response.txt"
+NPCMod.LastResponseContent = "" -- Track the last content of the response file
 
 -- Function called when the game starts
 NPCMod.OnGameStart = function()
@@ -78,6 +79,9 @@ NPCMod.OnTick = function()
             NPCMod.FollowPlayer()
         end
     end
+
+    -- Check if response file has been updated
+    NPCMod.CheckForResponse()
 end
 
 -- Function to handle chat input
@@ -100,9 +104,6 @@ NPCMod.OnInputSubmitted = function(target, button, text)
     if text ~= "" then
         player:Say(text)
         NPCMod.WriteToFile(NPCMod.UserInputFilePath, text)
-
-        -- Check for response after writing user input
-        NPCMod.CheckForResponse()
     end
 end
 
@@ -120,15 +121,13 @@ end
 
 -- Function to check for response from external process
 NPCMod.CheckForResponse = function()
-    local file = getFileReader(NPCMod.ResponseFilePath, false)
-    print("modlog, check file", file)
+    local responseFile = NPCMod.ResponseFilePath
+    local file = getFileReader(responseFile, false)
     if file then
         local response = file:readLine()
-        print("modlog2, check response", response)
-
         file:close()
-        if response and response:trim() ~= "" then
-
+        if response and response:trim() ~= "" and response ~= NPCMod.LastResponseContent then
+            NPCMod.LastResponseContent = response
             -- Display response above NPC
             NPCMod.npc:addLineChatElement(response)
         end
