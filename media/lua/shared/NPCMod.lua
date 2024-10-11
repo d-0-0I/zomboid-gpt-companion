@@ -35,6 +35,7 @@ NPCMod.SpawnNPC = function()
         npc:DoZombieStats() -- Apply zombie stats
         npc:setDir(IsoDirections.S) -- Set initial direction
         print("[NPC Mod] NPC spawned successfully at " .. x .. ", " .. y .. ", " .. z)
+        npc:addLineChatElement('FOOOBAR')
         NPCMod.npc = npc -- Store reference to the spawned NPC
     else
         print("[NPC Mod] Failed to spawn NPC")
@@ -77,9 +78,6 @@ NPCMod.OnTick = function()
             NPCMod.FollowPlayer()
         end
     end
-
-    -- Check for new response from external process
-    NPCMod.CheckForResponse()
 end
 
 -- Function to handle chat input
@@ -98,12 +96,13 @@ end
 -- Function to handle submitted input
 NPCMod.OnInputSubmitted = function(target, button, text)
     local player = getSpecificPlayer(0)
-    --     print("modlog2", target, button, button.parent.entry:getText(), containerObj)
-    -- player:Say( button.parent.entry:getText())
     local text = button.parent.entry:getText()
     if text ~= "" then
         player:Say(text)
         NPCMod.WriteToFile(NPCMod.UserInputFilePath, text)
+
+        -- Check for response after writing user input
+        NPCMod.CheckForResponse()
     end
 end
 
@@ -122,24 +121,18 @@ end
 -- Function to check for response from external process
 NPCMod.CheckForResponse = function()
     local file = getFileReader(NPCMod.ResponseFilePath, false)
+    print("modlog, check file", file)
     if file then
         local response = file:readLine()
+        print("modlog2, check response", response)
+
         file:close()
         if response and response:trim() ~= "" then
+
             -- Display response above NPC
-            NPCMod.DisplayChatBubble(NPCMod.npc, response)
-            -- Clear the response file
-            NPCMod.WriteToFile(NPCMod.ResponseFilePath, "")
+            NPCMod.npc:addLineChatElement(response)
         end
     end
-end
-
--- Function to display chat bubble above NPC
-NPCMod.DisplayChatBubble = function(npc, text)
-    if not npc then return end
-    -- Placeholder function for displaying chat bubble above the NPC
-    print("[NPC Mod] Displaying chat bubble: " .. text)
-    -- Add actual code to create a visual chat bubble in the game
 end
 
 -- Register events
