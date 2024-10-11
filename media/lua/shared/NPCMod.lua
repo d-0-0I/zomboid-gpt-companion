@@ -1,6 +1,7 @@
--- NPC Mod
+-- NPC Mod with ChatGPT Integration
 
 if not NPCMod then NPCMod = {} end
+
 
 NPCMod.SpawnDistance = 5
 NPCMod.FollowInterval = 3 -- Time interval in seconds for following the player
@@ -44,10 +45,6 @@ NPCMod.FollowPlayer = function()
 
     local player = getSpecificPlayer(0)
     local npc = NPCMod.npc
-    -- if not npc then
-    --     print("[NPC Mod] NPC does not exist or is invalid")
-    --     return
-    -- end
 
     local dx = player:getX() - npc:getX()
     local dy = player:getY() - npc:getY()
@@ -58,9 +55,6 @@ NPCMod.FollowPlayer = function()
 
     -- Only follow if the player is more than a certain distance away
     if distance > 1 then
-        -- if npc.pathToLocation then
-            -- npc:pathToLocation(player:getX(), player:getY(), player:getZ()) -- Use zombie pathfinding to follow the player
-        -- else
         npc:pathToCharacter(player)
     end
 end
@@ -82,8 +76,62 @@ NPCMod.OnTick = function()
     end
 end
 
+-- Function to handle submitted input
+NPCMod.OnInputSubmitted = function(target, button, text)
+    local player = getSpecificPlayer(0)
+    --     print("modlog2", target, button, button.parent.entry:getText(), containerObj)
+    -- player:Say( button.parent.entry:getText())
+    local text = button.parent.entry:getText()
+    if text ~= "" then
+        player:Say(text)
+    end
+end
+
+
+-- Function to handle chat input
+NPCMod.OnKeyPressed = function(key)
+    local player = getSpecificPlayer(0)
+
+    -- local function onSubmit(target, button, containerObj)
+    --     print("modlog2", target, button, button.parent.entry:getText(), containerObj)
+
+    --     player:Say( button.parent.entry:getText())
+    -- end
+    
+    if key == Keyboard.KEY_TAB then
+        local player = getSpecificPlayer(0)
+        if not player or not NPCMod.npc then return end
+
+        -- Create a simple input box using UIManager to get user input
+
+        -- local modal =      ISTextBox:new(0, 0, 280, 150, label, name,nil, onRename, playerObj:getPlayerNum(), containerObj)
+        local inputModal = ISTextBox:new(0, 0, 280, 180, "Enter your message to the NPC:", "", nil, NPCMod.OnInputSubmitted, player:getPlayerNum())
+        inputModal:initialise()
+        inputModal:addToUIManager()
+    end
+end
+
+-- Function to get response from ChatGPT API
+NPCMod.GetChatGPTResponse = function(userInput, callback)
+    -- Placeholder for API call, assuming an asynchronous HTTP request
+    -- Replace with actual API request code as needed
+    print("[NPC Mod] Sending request to ChatGPT API with user input: " .. userInput)
+    -- Simulate an asynchronous response with a delay
+    local simulatedResponse = "This is a response from ChatGPT to: " .. userInput
+    callback(simulatedResponse)
+end
+
+-- Function to display chat bubble above NPC
+NPCMod.DisplayChatBubble = function(npc, text)
+    if not npc then return end
+    -- Placeholder function for displaying chat bubble above the NPC
+    print("[NPC Mod] Displaying chat bubble: " .. text)
+    -- Add actual code to create a visual chat bubble in the game
+end
+
 -- Register events
 Events.OnGameStart.Add(NPCMod.OnGameStart)
 Events.OnTick.Add(NPCMod.OnTick)
+Events.OnKeyPressed.Add(NPCMod.OnKeyPressed)
 
 print("[NPC Mod] Script file loaded")
