@@ -18,7 +18,6 @@ end
 
 -- Function to spawn the NPC as a zombie
 NPCMod.SpawnNPC = function()
-    print("[NPC Mod] Attempting to spawn NPC")
     local player = getSpecificPlayer(0)
     if not player then
         print("[NPC Mod] Player not found")
@@ -35,8 +34,6 @@ NPCMod.SpawnNPC = function()
         npc:setUseless(true) -- Make the zombie harmless
         npc:DoZombieStats() -- Apply zombie stats
         npc:setDir(IsoDirections.S) -- Set initial direction
-        print("[NPC Mod] NPC spawned successfully at " .. x .. ", " .. y .. ", " .. z)
-        npc:addLineChatElement('FOOOBAR')
         NPCMod.npc = npc -- Store reference to the spawned NPC
     else
         print("[NPC Mod] Failed to spawn NPC")
@@ -56,7 +53,7 @@ NPCMod.FollowPlayer = function()
 
     local distance = math.sqrt(dx * dx + dy * dy)
 
-    print(string.format("[NPC Mod] NPC position relative to player: dx=%.2f, dy=%.2f, distance=%.2f", dx, dy, distance))
+    -- print(string.format("[NPC Mod] NPC position relative to player: dx=%.2f, dy=%.2f, distance=%.2f", dx, dy, distance))
 
     -- Only follow if the player is more than a certain distance away
     if distance > 1 then
