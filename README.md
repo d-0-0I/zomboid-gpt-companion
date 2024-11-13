@@ -26,8 +26,9 @@ Currently working and ideas for the future:
 
 TODO: 
 
-[] fix zombie following behavior (currently not working perfectly)
-[] fix zombie "vision", the image upload is too expensive/slows down the interaction too much - find a smarter way to do it in the background
+[ ] fix zombie following behavior (currently not working perfectly)
+
+[ ] fix zombie "vision", the image upload is too expensive/slows down the interaction too much - find a smarter way to do it in the background
 
 
 
