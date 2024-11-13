@@ -1,4 +1,4 @@
-*** this mod is a work in progress *** 
+*** this mod is a work in progress / me learning how to mod zomboid with lua and python *** 
 
 to run the mod: 
 
